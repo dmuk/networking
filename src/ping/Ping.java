@@ -14,10 +14,10 @@ public class Ping {
     
     public static void main(String[] args) throws Exception {
 
-        String ServerName = "localhost";
+        String ServerName = "CMPLEWIN-09";
         int port = 55555;
 
-        DatagramSocket2 socket = new DatagramSocket2(port);
+        DatagramSocket socket = new DatagramSocket3(port);
         InetAddress IPAddress =InetAddress.getByName(ServerName);
         
         AudioRecorder recorder = null;
@@ -28,23 +28,39 @@ public class Ping {
           System.out.println(e);
         }
             
-        long sendTime, receiveTime;
-        for(int i=0;i<6;i++){
-
-            sendTime = System.currentTimeMillis();
-            byte[] message = recorder.getBlock();
+        double overallStart, overallFinish, modStart, modFinish;
+        byte[] message;
+        for(int i=0;i<20;i++){
+            Thread.sleep(32);
+            overallStart = System.currentTimeMillis();
+            modStart = overallStart;
+            message = recorder.getBlock();
+            modFinish = System.currentTimeMillis();
+            System.out.print("Record Time: " + (modFinish - modStart));
+            modStart = modFinish;
             DatagramPacket request = new DatagramPacket(message, message.length,IPAddress,port );
             socket.send(request);
+            modFinish = System.currentTimeMillis();
+            System.out.print("\tPacket Creation: " + (modFinish - modStart));
+            modStart = modFinish;
             byte[] buffer = new byte[512];
             DatagramPacket reply = new DatagramPacket(buffer, 0, buffer.length);
-            socket.setSoTimeout(5000);
+            socket.setSoTimeout(1000);
             try {
+                modFinish = System.currentTimeMillis();
+                System.out.print("\tCreated Reply: " + (modFinish - modStart));
+                modStart = modFinish;
                 socket.receive(reply);
-                receiveTime = System.currentTimeMillis();
-                long difference = receiveTime - sendTime;
-                System.out.println(difference + "ms");
+                modFinish = System.currentTimeMillis();
+                System.out.print("\tReceived: " + (modFinish - modStart));
+                modStart = modFinish;
+                overallFinish = modFinish;
+                double rtt = overallFinish - overallStart;
+                System.out.println("\t RTT: " + rtt + "ms" + ". Start: " + overallStart + ". Receive: " + overallFinish);
+                double delay = rtt/2;
+                System.out.println("Delay: " + delay + "ms");
             } catch(SocketTimeoutException e){
-                System.out.println("Packet Timeout");
+                System.out.println("\tPacket Timeout");
             }
         }
     }
